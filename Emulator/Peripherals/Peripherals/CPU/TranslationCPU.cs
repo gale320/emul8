@@ -178,9 +178,14 @@ namespace Emul8.Peripherals.CPU
             }
             set
             {
-                TlibSetMaximumBlockSize(checked((uint)value));
-                ClearTranslationCache();
+                SetMaximumBlockSize(checked((uint)value));
             }
+        }
+
+        private void SetMaximumBlockSize(uint value, bool skipSync = false)
+        {
+            TlibSetMaximumBlockSize(value);
+            ClearTranslationCache(skipSync);
         }
 
         public bool LogTranslationBlockFetch
@@ -216,9 +221,21 @@ namespace Emul8.Peripherals.CPU
 
         public void ClearTranslationCache()
         {
-            using(machine.ObtainPausedState())
+            ClearTranslationCache(false);
+        }
+
+        public void ClearTranslationCache(bool skipSync)
+        {
+            if(skipSync)
             {
                 TlibInvalidateTranslationCache();
+            }
+            else
+            {
+                using(machine.ObtainPausedState())
+                {
+                    TlibInvalidateTranslationCache();
+                }
             }
         }
 
