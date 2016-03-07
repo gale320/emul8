@@ -1823,9 +1823,6 @@ namespace Emul8.Peripherals.CPU
         private FuncInt32 TlibIsWfi;
 
         [Import]
-        private ActionInt32 TlibSetSingleStep;
-
-        [Import]
         private FuncUInt32 TlibGetPageSize;
 
         [Import]
