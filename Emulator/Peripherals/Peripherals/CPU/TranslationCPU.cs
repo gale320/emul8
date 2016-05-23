@@ -528,7 +528,7 @@ namespace Emul8.Peripherals.CPU
             }
         }
 
-        public event Action<HaltReason> Halted;
+        public event Action<HaltArguments> Halted;
 
         public void MapMemory(IMappedSegment segment)
         {
@@ -1167,10 +1167,15 @@ namespace Emul8.Peripherals.CPU
 
         private void InvokeHalted(HaltReason reason)
         {
+            InvokeHalted(new HaltArguments(reason));
+        }
+
+        private void InvokeHalted(HaltArguments arguments)
+        {
             var halted = Halted;
             if(halted != null)
             {
-                halted(reason);
+                halted(arguments);
             }
         }
 
