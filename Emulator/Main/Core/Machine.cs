@@ -460,9 +460,10 @@ namespace Emul8.Core
                 hostTimeClockSource.Pause();
                 foreach(var ownLife in ownLifes.OrderBy(x => x is ICPU ? 0 : 1))
                 {
-                    this.NoisyLog("Pausing {0}.", GetNameForOwnLife(ownLife));
+                    var peripheralName = GetNameForOwnLife(ownLife);
+                    this.NoisyLog("Pausing {0}.", peripheralName);
                     ownLife.Pause();
-                    this.NoisyLog("{0} paused.", GetNameForOwnLife(ownLife));
+                    this.NoisyLog("{0} paused.", peripheralName);
                 }
                 state = State.Paused;
                 var machinePaused = StateChanged;
