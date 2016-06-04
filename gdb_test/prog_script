@@ -1,0 +1,13 @@
+using sysbus
+
+createPlatform Versatile
+sysbus LoadELF @../test/prog/gdb_test.elf
+cpu SP 0x600
+cpu SetRegisterUnsafe 11 0x600
+cpu SetRegisterUnsafe 13 0x600
+cpu SetRegisterUnsafe 14 0x600
+
+machine SetClockSource sysbus.cpu
+cpu MaximumBlockSize 1
+cpu StartGDBServer 3333
+

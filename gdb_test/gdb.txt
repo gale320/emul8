@@ -1,0 +1,123 @@
+*** Settings ***
+Library  Process
+Library  String
+Library  ./gdb_library.py
+Test Setup      Prepare Environment
+Test Teardown   Cleanup Environment
+
+*** Keywords ***
+Prepare Environment
+    Start Process                      ../public/output/Debug/CLI.exe      -e                                s @../test/prog_script
+    Start GDB
+    Command GDB                        file gdb_test.elf
+    Command GDB                        target remote :3333
+
+Cleanup Environment
+    Stop GDB
+    Wait For Process
+
+*** Test Cases ***
+
+Should Write And Read Memory
+    ${x}=  Command GDB                 x/1b 0x500
+           Should Contain              ${x}            0x500:\t0
+           Command GDB                 set {char}0x500 = 127
+    ${x}=  Command GDB                 x/1b 0x500
+           Should Contain              ${x}            0x500:\t127
+
+Should Stop On Breakpoint
+           Command GDB                 b 6
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Breakpoint 1, main () at gdb_test.c:6
+           Should Contain              ${x}             6\t\ \ (*a)++;
+
+Shold Handle Multiple Breakpoints
+           Command GDB                 b 6
+           Command GDB                 b 7
+           Command GDB                 b 9
+           Command GDB                 b 10
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Breakpoint 1, main () at gdb_test.c:6
+           Should Contain              ${x}             6\t\ \ (*a)++;
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Breakpoint 2, main () at gdb_test.c:7
+           Should Contain              ${x}             7\t\ \ *a += test();
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Breakpoint 3, main () at gdb_test.c:9
+           Should Contain              ${x}             9\t\ \ int *b = (int*)0x200;
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Breakpoint 4, main () at gdb_test.c:10
+           Should Contain              ${x}             10\t\ \ (*b)++;
+
+Should Stop On Write Watchpoint
+    ${x}=  Command GDB                 watch *a
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Hardware watchpoint 1: *a
+           Should Contain              ${x}             Old value = 0
+           Should Contain              ${x}             New value = 1
+           Should Contain              ${x}             main () at gdb_test.c:7
+           Should Contain              ${x}             7\t\ \ *a += test();
+
+Should Handle Multiple Write Watchpoints
+           Command GDB                 watch *a
+           Command GDB                 watch *b
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Hardware watchpoint 1: *a
+           Should Contain              ${x}             Old value = 0
+           Should Contain              ${x}             New value = 1
+           Should Contain              ${x}             main () at gdb_test.c:7
+           Should Contain              ${x}             7\t\ \ *a += test();
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Hardware watchpoint 1: *a
+           Should Contain              ${x}             Old value = 1
+           Should Contain              ${x}             New value = 4
+           Should Contain              ${x}             main () at gdb_test.c:9
+           Should Contain              ${x}             9\t\ \ int *b = (int*)0x200;
+
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Hardware watchpoint 2: *b
+           Should Contain              ${x}             Old value = 0
+           Should Contain              ${x}             New value = 1
+           Should Contain              ${x}             main () at gdb_test.c:12
+           Should Contain              ${x}             12\t\ \ while(1);
+
+Should Stop On Read Watchpoint
+    ${x}=  Command GDB                 rwatch *a
+    ${x}=  Command GDB                 c
+           Should Contain              ${x}             Hardware read watchpoint 1: *a
+           Should Contain              ${x}             Value = 0
+           Should Contain              ${x}             0x000100d0 in main () at gdb_test.c:6
+           Should Contain              ${x}             6\t\ \ (*a)++;
+
+Should Handle Multiple Read Watchpoints
+     ${x}=  Command GDB                 rwatch *a
+     ${x}=  Command GDB                 rwatch *b
+
+     ${x}=  Command GDB                 c
+            Should Contain              ${x}             Hardware read watchpoint 1: *a
+            Should Contain              ${x}             Value = 0
+            Should Contain              ${x}             0x000100d0 in main () at gdb_test.c:6
+            Should Contain              ${x}             6\t\ \ (*a)++;
+
+     ${x}=  Command GDB                 c
+     ${x}=  Command GDB                 c
+     ${x}=  Command GDB                 c
+            Should Contain              ${x}             Hardware read watchpoint 1: *a
+            Should Contain              ${x}             Value = 1
+            Should Contain              ${x}             0x000100ec in main () at gdb_test.c:7
+            Should Contain              ${x}             7\t\ \ *a += test();
+
+     ${x}=  Command GDB                 c
+     ${x}=  Command GDB                 c
+     ${x}=  Command GDB                 c
+            Should Contain              ${x}             Hardware read watchpoint 2: *b
+            Should Contain              ${x}             Value = 0
+            Should Contain              ${x}             0x00010108 in main () at gdb_test.c:10
+            Should Contain              ${x}             10\t\ \ (*b)++;
+
