@@ -7,7 +7,7 @@ Test Teardown   Cleanup Environment
 
 *** Keywords ***
 Prepare Environment
-    Start Process                      ../public/output/Debug/CLI.exe      -e                                s @../test/prog_script
+    Start Process                      ../output/Debug/CLI.exe      -e                                s @gdb_test/prog_script
     Start GDB
     Command GDB                        file gdb_test.elf
     Command GDB                        target remote :3333
