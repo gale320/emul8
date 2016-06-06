@@ -83,7 +83,8 @@ signal.signal(signal.SIGTSTP, report_signal_handler)
 
 print("Building projects.")
 for project in options.tests:
-    build_project(project)
+    if project.endswith('csproj'):
+        build_project(project)
 
 print("Starting tests. Use STOP signal (default: Ctrl+Z) to check progress.")
 
@@ -94,12 +95,17 @@ while options.repeat_count == 0 or counter < options.repeat_count:
     counter += 1
 
     for project in options.tests:
-        filename = os.path.split(project)[1]
-        subprocess.call(['bash', '-c', 'cp -r ' + os.path.dirname(nunit_path) + '/* ' + bin_directory + ''])
-        copied_nunit_path = bin_directory + "/nunit-console.exe"
-        args = ['mono', copied_nunit_path, '-noshadow', '-nologo', '-labels', '-domain:None', filename.replace("csproj", "dll")]
-        if options.fixture:
-            args.append('-run:' + options.fixture)
+        if project.endswith('csproj'):
+            filename = os.path.split(project)[1]
+            subprocess.call(['bash', '-c', 'cp -r ' + os.path.dirname(nunit_path) + '/* ' + bin_directory + ''])
+            copied_nunit_path = bin_directory + "/nunit-console.exe"
+            args = ['mono', copied_nunit_path, '-noshadow', '-nologo', '-labels', '-domain:None', filename.replace("csproj", "dll")]
+            if options.fixture:
+                args.append('-run:' + options.fixture)
+        elif project.endswith('robot'):
+            test_name = os.path.splitext(os.path.basename(project))[0]
+            args = ['robot', '--outputdir', test_name,  project]
+
         process = subprocess.Popen(args, cwd=bin_directory, bufsize = 1, preexec_fn = ignore_sig, stdout =
                 subprocess.PIPE, stderr = subprocess.STDOUT)
         while True:
