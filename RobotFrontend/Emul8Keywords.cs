@@ -7,8 +7,10 @@
 using System;
 using System.Text;
 using AntShell.Commands;
+using Emul8.Core;
 using Emul8.Robot;
 using Emul8.UserInterface;
+using Emul8.Utilities;
 
 namespace Emul8.RobotFrontend
 {
@@ -17,12 +19,19 @@ namespace Emul8.RobotFrontend
         public Emul8Keywords()
         {
             interaction = new MemoryCommandInteraction();
+            TypeManager.Instance.PluginManager.Init("CLI");
             monitor = new Monitor();
             monitor.Interaction = interaction;
         }
 
         public void Dispose()
         {
+        }
+
+        [RobotFrameworkKeyword]
+        public void StartEmulation()
+        {
+            EmulationManager.Instance.CurrentEmulation.StartAll();
         }
 
         [RobotFrameworkKeyword]
@@ -34,6 +43,39 @@ namespace Emul8.RobotFrontend
             }
 
             return interaction.Output;
+        }
+
+        [RobotFrameworkKeyword]
+        public void SetEmul8Variable(string variableName, string path)
+        {
+            ExecuteCommand("${0}=@{1}".FormatWith(variableName, path));
+        }
+
+        [RobotFrameworkKeyword]
+        public void AddBreakpoint(string function)
+        {
+            ExecuteCommand("sysbus.cpu AddBreakpoint `sysbus GetSymbolAddress \"{0}\"`".FormatWith(function));
+        }
+
+        [RobotFrameworkKeyword]
+        public void ContinueFromBreakpoint()
+        {
+            ExecuteCommand("sysbus.cpu RemoveBreakpoint `sysbus.cpu PC`; s");
+        }
+
+        [RobotFrameworkKeyword]
+        public void MachineShouldBePaused()
+        {
+            if(!monitor.Machine.IsPaused)
+            {
+                throw new Exception();
+            }
+        }
+
+        [RobotFrameworkKeyword]
+        public string FindCurrentSymbol()
+        {
+            return ExecuteCommand("sysbus FindSymbolAt `sysbus.cpu PC`");
         }
 
         [RobotFrameworkKeyword]
@@ -64,8 +106,8 @@ namespace Emul8.RobotFrontend
                 error = new StringBuilder();
             }
 
-            public string Output 
-            { 
+            public string Output
+            {
                 get
                 {
                     lock(output)

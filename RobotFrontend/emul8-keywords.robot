@@ -1,7 +1,6 @@
 *** Settings ***
 Library         Process
 Library         OperatingSystem
-Library         emul8-lib.py
 
 *** Variables ***
 ${PORT_NUMBER}      9999
