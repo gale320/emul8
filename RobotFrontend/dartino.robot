@@ -1,5 +1,5 @@
 *** Settings ***
-Suite Setup     Setup
+Suite Setup     Setup  ${dir}
 Suite Teardown  Teardown
 Test Teardown   Clear Emulation
 Resource        emul8-keywords.robot
